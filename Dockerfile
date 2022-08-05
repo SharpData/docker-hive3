@@ -1,4 +1,22 @@
-FROM openjdk:8u212-b04-jre-stretch
+FROM openjdk:8u332-jre-slim-bullseye
+
+RUN mkdir -p /opt/atlas
+ENV ATLAS_HOME=/opt/atlas
+RUN mkdir -p $ATLAS_HOME/hook/hive
+ENV HADOOP_HOME=/opt/hadoop
+ENV HADOOP_VERSION=2.7.4
+
+ADD https://archive.apache.org/dist/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz /hadoop-$HADOOP_VERSION.tar.gz
+RUN tar -xzf hadoop-$HADOOP_VERSION.tar.gz \
+    && mv hadoop-$HADOOP_VERSION $HADOOP_HOME
+
+ENV HIVE_HOME=/opt/hive
+ARG HIVE_VERSION=3.1.2
+ADD https://archive.apache.org/dist/hive/hive-$HIVE_VERSION/apache-hive-$HIVE_VERSION-bin.tar.gz /apache-hive-$HIVE_VERSION-bin.tar.gz
+RUN tar -xzf apache-hive-$HIVE_VERSION-bin.tar.gz \
+	&& mv apache-hive-$HIVE_VERSION-bin $HIVE_HOME
+
+FROM openjdk:8u332-jre-slim-bullseye
 
 RUN mkdir -p /opt/atlas
 ENV ATLAS_HOME=/opt/atlas
@@ -7,23 +25,17 @@ ENV HADOOP_HOME=/opt/hadoop
 ENV HADOOP_VERSION=2.7.4
 RUN apt-get update && apt-get install -y ant && apt-get install -y expect
 
-ADD https://archive.apache.org/dist/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz /hadoop-$HADOOP_VERSION.tar.gz
-RUN tar -xzf hadoop-$HADOOP_VERSION.tar.gz \
-    && mv hadoop-$HADOOP_VERSION $HADOOP_HOME \
-    && rm hadoop-$HADOOP_VERSION.tar.gz
+COPY --from=0 $HADOOP_HOME $HADOOP_HOME
 
 ENV HIVE_HOME=/opt/hive
 ARG HIVE_VERSION=3.1.2
-ADD https://archive.apache.org/dist/hive/hive-$HIVE_VERSION/apache-hive-$HIVE_VERSION-bin.tar.gz /apache-hive-$HIVE_VERSION-bin.tar.gz
-RUN tar -xzf apache-hive-$HIVE_VERSION-bin.tar.gz \
-	&& mv apache-hive-$HIVE_VERSION-bin $HIVE_HOME \
-	&& rm apache-hive-$HIVE_VERSION-bin.tar.gz
+COPY --from=0 $HIVE_HOME $HIVE_HOME
 
 ENV MYSQL_CONNECTOR_VERSION=8.0.23
 ADD https://repo1.maven.org/maven2/mysql/mysql-connector-java/$MYSQL_CONNECTOR_VERSION/mysql-connector-java-$MYSQL_CONNECTOR_VERSION.jar \
     $HIVE_HOME/lib/mysql-connector-java-$MYSQL_CONNECTOR_VERSION.jar
 
-ARG HUDI_VERSION=0.10.0
+ARG HUDI_VERSION=0.11.1
 ADD https://repo1.maven.org/maven2/org/apache/hudi/hudi-hive-sync-bundle/$HUDI_VERSION/hudi-hive-sync-bundle-$HUDI_VERSION.jar \
     $HIVE_HOME/lib/hudi-hive-sync-bundle-$HUDI_VERSION.jar
 ADD https://repo1.maven.org/maven2/org/apache/hudi/hudi-hadoop-mr-bundle/$HUDI_VERSION/hudi-hadoop-mr-bundle-$HUDI_VERSION.jar \
@@ -49,7 +61,6 @@ ENV HBASE_VERSION=2.0.2
 ENV JACKSON_VERSION=2.9.9
 ENV JERSEY_VERSION=1.19
 ENV JSR311_VERSION=1.1
-ENV SCALA_LIBRARY_VERSION=2.11.12
 ENV COMMONS_CONFIG_VERSION=1.10
 
 RUN mkdir -p $ATLAS_HOME/hook/hive/atlas-hive-plugin-impl
@@ -76,7 +87,6 @@ ADD https://repo1.maven.org/maven2/com/sun/jersey/jersey-json/$JERSEY_VERSION/je
 ADD https://repo1.maven.org/maven2/com/sun/jersey/contribs/jersey-multipart/$JERSEY_VERSION/jersey-multipart-$JERSEY_VERSION.jar ${ATLAS_HOME}/hook/hive/atlas-hive-plugin-impl/jersey-multipart-$JERSEY_VERSION.jar
 ADD https://repo1.maven.org/maven2/org/apache/kafka/kafka-clients/$KAFKA_VERSION/kafka-clients-$KAFKA_VERSION.jar ${ATLAS_HOME}/hook/hive/atlas-hive-plugin-impl/kafka-clients-$KAFKA_VERSION.jar
 ADD https://repo1.maven.org/maven2/org/apache/kafka/kafka_2.12/$KAFKA_VERSION/kafka_2.12-$KAFKA_VERSION.jar ${ATLAS_HOME}/hook/hive/atlas-hive-plugin-impl/kafka_2.12-$KAFKA_VERSION.jar
-ADD https://repo1.maven.org/maven2/org/scala-lang/scala-library/$SCALA_LIBRARY_VERSION/scala-library-$SCALA_LIBRARY_VERSION.jar ${ATLAS_HOME}/hook/hive/atlas-hive-plugin-impl/scala-library-$SCALA_LIBRARY_VERSION.jar
 ADD https://repo1.maven.org/maven2/commons-configuration/commons-configuration/$COMMONS_CONFIG_VERSION/commons-configuration-$COMMONS_CONFIG_VERSION.jar ${ATLAS_HOME}/hook/hive/atlas-hive-plugin-impl/commons-configuration-$COMMONS_CONFIG_VERSION.jar
 ADD https://repo1.maven.org/maven2/org/apache/atlas/hdfs-model/$ATLAS_VERSION/hdfs-model-$ATLAS_VERSION.jar ${ATLAS_HOME}/hook/hive/atlas-hive-plugin-impl/hdfs-model-$ATLAS_VERSION.jar
 
