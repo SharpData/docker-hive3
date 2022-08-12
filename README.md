@@ -10,34 +10,7 @@ docker build -t sharpetl/hive3:3.1.2 .
 
 ## Run
 
-You can use this as your docker-compose file:
-
-```yaml
-version: '3'
-services:
-  hive:
-    image: sharpetl/hive3:3.1.2
-    ports:
-      - "9083:9083"
-      - "10000:10000"
-      - "10002:10002"
-    environment:
-      - CONNECTION_URL=jdbc:mysql://mysql:3306/hive?useSSL=false
-      - CONNECTION_USER_NAME=root
-      - CONNECTION_PASSWORD=root
-      - WAREHOUSE_DIR=file://${HOME}/Documents/warehouse
-      - WAIT_HOSTS=mysql:3306
-    depends_on:
-      - mysql
-    volumes:
-      - ${HOME}/Documents/warehouse:${HOME}/Documents/warehouse
-  mysql:
-    image: mysql:5.7.28
-    ports:
-      - "3306:3306"
-    environment:
-      - MYSQL_ROOT_PASSWORD=root
-```
+You can find the docker-compose file [here](https://github.com/SharpData/SharpETL/tree/main/docker)
 
 ## Acknowledgements
 
